@@ -447,7 +447,7 @@ elseif (isset($_GET['init_async'])) {
         echo 'Error 30: Invalid token';
         exit;
       }
-      $user = $jwd->getClaim('user');
+      $user = $jwt->getClaim('user');
     } elseif (isset($_POST['upload_password'])) {
         if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
             echo 'Error 20: Invalid password';

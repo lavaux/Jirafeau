@@ -2,7 +2,7 @@ FROM php:7.3-fpm-alpine
 MAINTAINER "Jérôme Jutteau <jerome@jutteau.fr>"
 
 # lighttpd user
-ARG USER_ID=100
+ARG USER_ID=101
 # www-data group
 ARG GROUP_ID=82
 
@@ -31,7 +31,7 @@ COPY docker/docker_config.php /docker_config.php
 # install lighttpd
 RUN apk add lighttpd php7-mcrypt && \
     echo "extension=/usr/lib/php7/modules/mcrypt.so" > /usr/local/etc/php/conf.d/mcrypt.ini && \
-    chown -R $USER_ID /var/log/lighttpd && \
+    chown -R $USER_ID:$GROUP_ID /var/log/lighttpd && \
     mkdir -p /usr/local/etc/php
 COPY docker/php.ini /usr/local/etc/php/php.ini
 COPY docker/lighttpd.conf /etc/lighttpd/lighttpd.conf

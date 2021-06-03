@@ -20,6 +20,7 @@
  */
 session_start();
 define('JIRAFEAU_ROOT', dirname(__FILE__) . '/');
+require(__DIR__ . '/vendor/autoload.php');
 
 require(JIRAFEAU_ROOT . 'lib/settings.php');
 require(JIRAFEAU_ROOT . 'lib/functions.php');

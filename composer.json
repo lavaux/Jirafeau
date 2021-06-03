@@ -4,6 +4,7 @@
     "type": "project",
     "license": "AGPL-3.0",
     "require": {
-      "league/oauth2-client": "2.6.*"
+      "league/oauth2-client": "2.6.*",
+      "kelvinmo/simplejwt": "v0.5.*"
     }
 }

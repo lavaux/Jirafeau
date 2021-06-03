@@ -21,6 +21,9 @@
 
 define('JIRAFEAU_ROOT', dirname(__FILE__) . '/');
 
+require(__DIR__ . '/vendor/autoload.php');
+
+
 require(JIRAFEAU_ROOT . 'lib/settings.php');
 require(JIRAFEAU_ROOT . 'lib/functions.php');
 require(JIRAFEAU_ROOT . 'lib/lang.php');
@@ -62,20 +65,32 @@ if (has_error()) {
     exit;
 }
 
+if (isset($_GET['token'])) {
+
 /* Upload file */
-if (isset($_FILES['file']) && is_writable(VAR_FILES)
+} elseif (isset($_FILES['file']) && is_writable(VAR_FILES)
     && is_writable(VAR_LINKS)) {
+
     if (isset($_POST['upload_password'])) {
         if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
             echo 'Error 3: Invalid password';
             exit;
         }
-    } else {
-        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
+    } elseif (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
             echo 'Error 2: No password nor allowed IP';
             exit;
         }
+    } elseif (isset($_POST['token'])) {
+      $key_set = jirafeau_setup_keyset($cfg);
+
+      try {
+        $jwt = SimpleJWT\JWT::decode($_GET['token'], $key_set, 'HS256');
+      } catch (SimpleJWT\InvalidTokenException $e) {
+        echo 'Error 30: Invalid token';
+        exit;
+      }
     }
+
     $key = '';
     if (isset($_POST['key'])) {
         $key = $_POST['key'];

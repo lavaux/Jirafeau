@@ -1536,3 +1536,14 @@ function jirafeau_default_web_root()
 {
     return $_SERVER['HTTP_HOST'] . str_replace(basename(__FILE__), '', $_SERVER['REQUEST_URI']);
 }
+
+function jirafeau_setup_keyset($cfg) {
+    $set = SimpleJWT\Keys\KeySet::createFromSecret('secret123');
+
+    $set = new SimpleJWT\Keys\KeySet();
+    $key = new SimpleJWT\Keys\SymmetricKey('secret123', 'bin');
+
+    $set->add($key);
+
+    return $set;
+}

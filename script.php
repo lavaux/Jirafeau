@@ -66,7 +66,21 @@ if (has_error()) {
 }
 
 if (isset($_GET['token'])) {
-  echo "Token";
+  $key_set = jirafeau_setup_keyset($cfg);
+  if (isset($_GET['user'])) {
+    echo 'Error 31: A user is needed.';
+    exit;
+  }
+  $headers = ['alg' => 'HS256', 'typ' => 'JWT'];
+  // expiration of the token is one day
+  $claims = ['exp' => time() + 86400, 'user' => $_GET['user']];
+  $jwt = new SimpleJWT\JWT($headers, $claims);
+
+  try {
+      echo $jwt->encode($set) . "\n";
+  } catch (\RuntimeException $e) {
+      echo 'Error 32: error while encoding the token';
+  }
   exit;
 /* Upload file */
 } elseif (isset($_FILES['file']) && is_writable(VAR_FILES)

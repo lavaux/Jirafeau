@@ -33,6 +33,12 @@ if (has_error()) {
     exit;
 }
 
+// Second check: Challenge by IP
+if (isset($_GET['oauth'])) {
+    echo jirafeau_do_oauth($cfg, $_GET['code']);
+    exit;
+}
+
 require(JIRAFEAU_ROOT . 'lib/template/header.php');
 
 /* Check if user is allowed to upload. */
@@ -41,9 +47,7 @@ if (true === jirafeau_challenge_upload_ip_without_password($cfg, get_ip_address(
     $_SESSION['upload_auth'] = true;
     $_POST['upload_password'] = '';
     $_SESSION['user_upload_password'] = $_POST['upload_password'];
-}
-// Second check: Challenge by IP
-elseif (true === jirafeau_challenge_upload_ip($cfg, get_ip_address($cfg))) {
+} elseif (true === jirafeau_challenge_upload_ip($cfg, get_ip_address($cfg))) {
     // Is an upload password required?
     if (jirafeau_has_upload_password($cfg)) {
         // Logout action
@@ -78,6 +82,8 @@ elseif (true === jirafeau_challenge_upload_ip($cfg, get_ip_address($cfg))) {
                     name = "upload_password" id = "upload_password"
                     size = "40" autocomplete = "current-password" />
                     </td>
+                </tr><tr>
+                    <td class = "field"><a href="/index.php?oauth">Sign-in with Bitbucket</a></td>
                 </tr>
                 <tr class = "nav">
                     <td class = "nav next">

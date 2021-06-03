@@ -77,7 +77,7 @@ if (isset($_GET['token'])) {
   $jwt = new SimpleJWT\JWT($headers, $claims);
 
   try {
-      echo $jwt->encode($set) . "\n";
+      echo $jwt->encode($key_set) . "\n";
   } catch (\RuntimeException $e) {
       echo 'Error 32: error while encoding the token';
   }

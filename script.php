@@ -86,14 +86,13 @@ if (isset($_GET['token'])) {
 } elseif (isset($_FILES['file']) && is_writable(VAR_FILES)
     && is_writable(VAR_LINKS)) {
 
+    $user = 'UNKNOWN';
+
     if (isset($_POST['upload_password'])) {
         if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
             echo 'Error 3: Invalid password';
             exit;
         }
-    } elseif (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
-            echo 'Error 2: No password nor allowed IP';
-            exit;
     } elseif (isset($_POST['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
@@ -103,8 +102,14 @@ if (isset($_GET['token'])) {
         echo 'Error 30: Invalid token';
         exit;
       }
-    }
 
+      $user = $jwt->getClaim('user');
+    } else {
+      if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
+            echo 'Error 2: No password nor allowed IP';
+            exit;
+      }
+    }
     $key = '';
     if (isset($_POST['key'])) {
         $key = $_POST['key'];
@@ -170,7 +175,8 @@ if (isset($_GET['token'])) {
         $ip,
         $cfg['enable_crypt'],
         $cfg['link_name_length'],
-        $cfg['file_hash']
+        $cfg['file_hash'],
+        $user
     );
 
     if (empty($res) || $res['error']['has_error']) {
@@ -437,11 +443,6 @@ elseif (isset($_GET['init_async'])) {
             echo 'Error 20: Invalid password';
             exit;
         }
-    } else {
-        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
-            echo 'Error 19: No password nor allowed IP';
-            exit;
-        }
     } elseif (isset($_POST['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
@@ -452,6 +453,11 @@ elseif (isset($_GET['init_async'])) {
         exit;
       }
       $user = $jwd->getClaim('user');
+    } else {
+        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
+            echo 'Error 19: No password nor allowed IP';
+            exit;
+        }
     }
 
     if (!isset($_POST['filename'])) {

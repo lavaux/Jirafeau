@@ -88,12 +88,7 @@ if (isset($_GET['token'])) {
 
     $user = 'UNKNOWN';
 
-    if (isset($_POST['upload_password'])) {
-        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
-            echo 'Error 3: Invalid password';
-            exit;
-        }
-    } elseif (isset($_POST['token'])) {
+    if (isset($_POST['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
       try {
@@ -104,6 +99,11 @@ if (isset($_GET['token'])) {
       }
 
       $user = $jwt->getClaim('user');
+    } elseif (isset($_POST['upload_password'])) {
+        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
+            echo 'Error 3: Invalid password';
+            exit;
+        }
     } else {
       if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
             echo 'Error 2: No password nor allowed IP';
@@ -438,12 +438,7 @@ fi
 /* Initialize an asynchronous upload. */
 elseif (isset($_GET['init_async'])) {
     $user = 'UNKNOWN';
-    if (isset($_POST['upload_password'])) {
-        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
-            echo 'Error 20: Invalid password';
-            exit;
-        }
-    } elseif (isset($_POST['token'])) {
+    if (isset($_POST['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
       try {
@@ -453,6 +448,11 @@ elseif (isset($_GET['init_async'])) {
         exit;
       }
       $user = $jwd->getClaim('user');
+    } elseif (isset($_POST['upload_password'])) {
+        if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
+            echo 'Error 20: Invalid password';
+            exit;
+        }
     } else {
         if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
             echo 'Error 19: No password nor allowed IP';

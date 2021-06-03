@@ -65,25 +65,8 @@ if (has_error()) {
     exit;
 }
 
-if (isset($_GET['token'])) {
-  $key_set = jirafeau_setup_keyset($cfg);
-  if (isset($_GET['user'])) {
-    echo 'Error 31: A user is needed.';
-    exit;
-  }
-  $headers = ['alg' => 'HS256', 'typ' => 'JWT'];
-  // expiration of the token is one day
-  $claims = ['exp' => time() + 86400, 'user' => $_GET['user']];
-  $jwt = new SimpleJWT\JWT($headers, $claims);
-
-  try {
-      echo $jwt->encode($key_set) . "\n";
-  } catch (\RuntimeException $e) {
-      echo 'Error 32: error while encoding the token';
-  }
-  exit;
 /* Upload file */
-} elseif (isset($_FILES['file']) && is_writable(VAR_FILES)
+if (isset($_FILES['file']) && is_writable(VAR_FILES)
     && is_writable(VAR_LINKS)) {
 
     $user = 'UNKNOWN';
@@ -166,7 +149,7 @@ if (isset($_GET['token'])) {
     } else {
         $ip = "";
     }
-    
+
     $res = jirafeau_upload(
         $_FILES['file'],
         isset($_POST['one_time_download']),
@@ -443,6 +426,9 @@ elseif (isset($_GET['init_async'])) {
 
       try {
         $jwt = SimpleJWT\JWT::decode($_POST['token'], $key_set, 'HS256');
+      } catch (\InvalidArgumentException $e) {
+        echo 'Error 30: Invalid token';
+        exit;
       } catch (SimpleJWT\InvalidTokenException $e) {
         echo 'Error 30: Invalid token';
         exit;
@@ -519,7 +505,7 @@ elseif (isset($_GET['init_async'])) {
     } else {
         $ip = "";
     }
-    
+
     echo jirafeau_async_init(
         $_POST['filename'],
         $type,

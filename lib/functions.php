@@ -1050,7 +1050,7 @@ function jirafeau_async_push($ref, $data, $code, $max_file_size)
         $handle,
         $a['file_name'] . NL. $a['mime_type'] . NL. $a['key'] . NL .
             $a['time'] . NL . $a['onetime'] . NL . $a['ip'] . NL .
-            time() . NL . $code . NL . $a['user']
+            time() . NL . $code . NL . $a['user'] . NL
     );
     fclose($handle);
     return $code;
@@ -1541,39 +1541,174 @@ function jirafeau_default_web_root()
 }
 
 function jirafeau_setup_keyset($cfg) {
-    $set = SimpleJWT\Keys\KeySet::createFromSecret('secret123');
+//    $set = SimpleJWT\Keys\KeySet::createFromSecret('4b16ad21-bdda-4b2d-a2de-4a6f0b7b8d88');
 
     $set = new SimpleJWT\Keys\KeySet();
-    $key = new SimpleJWT\Keys\SymmetricKey('secret123', 'bin');
+    $key = new SimpleJWT\Keys\SymmetricKey('12697cc9-7ea1-4a45-a4a5-9661d0803258', 'bin');
 
     $set->add($key);
 
     return $set;
 }
 
-
-function jirafeau_do_oauth($cfg, $code) {
-    $provider = new \League\OAuth2\Client\Provider\GenericProvider([
+function jirafeau_build_oauth_provider($cfg) {
+    return new \League\OAuth2\Client\Provider\GenericProvider([
         'clientId'                => $cfg["oauth_client_id"],    // The client ID assigned to you by the provider
         'clientSecret'            => $cfg["oauth_client_secret"],    // The client password assigned to you by the provider
-        'redirectUri'             => $cfg['web_root'] . "index.php?oauth",
+        'redirectUri'             => $cfg['web_root'] . "oauth.php",
         'urlAuthorize'            => $cfg['oauth_authorize'],
         'urlAccessToken'          => $cfg['oauth_token'],
         'urlResourceOwnerDetails' => $cfg['oauth_resource']
     ]);
-
-    if (!isset($code)) {
-
-      // Fetch the authorization URL from the provider; this returns the
-      // urlAuthorize option and generates and applies any necessary parameters
-      // (e.g. state).
-      $authorizationUrl = $provider->getAuthorizationUrl();
-
-      // Get the state generated for you and store it to the session.
-      $_SESSION['oauth2state'] = $provider->getState();
-
-      // Redirect the user to the authorization URL.
-      header('Location: ' . $authorizationUrl);
-      exit;
-    }
 }
+
+function jirafeau_build_oauth_bb_workspace($cfg) {
+    return new \League\OAuth2\Client\Provider\GenericProvider([
+        'clientId'                => $cfg["oauth_client_id"],    // The client ID assigned to you by the provider
+        'clientSecret'            => $cfg["oauth_client_secret"],    // The client password assigned to you by the provider
+        'redirectUri'             => $cfg['web_root'] . "oauth.php",
+        'urlAuthorize'            => $cfg['oauth_authorize'],
+        'urlAccessToken'          => $cfg['oauth_token'],
+        'urlResourceOwnerDetails' => $cfg['oauth_workspaces']
+    ]);
+}
+
+function jirafeau_do_oauth_level_1($cfg) {
+    $provider = jirafeau_build_oauth_provider($cfg);
+
+    // Fetch the authorization URL from the provider; this returns the
+    // urlAuthorize option and generates and applies any necessary parameters
+    // (e.g. state).
+    $authorizationUrl = $provider->getAuthorizationUrl();
+
+    // Get the state generated for you and store it to the session.
+    $_SESSION['oauth2state'] = $provider->getState();
+
+    // Redirect the user to the authorization URL.
+    header('Location: ' . $authorizationUrl);
+    exit;
+}
+
+function jirafeau_store_access_token($cfg, $accessToken) {
+/*      $keyset = jirafeau_setup_keyset($cfg);
+
+      $claims = ['token' => $accessToken];
+      $jwt = new SimpleJWT\JWT($headers, $claims);
+
+      try {
+        $_SESSION['jirafeau_key'] = $jwt->encode($keyset,
+                     json_encode($accessToken->jsonSerialize())
+        );
+      } catch (\RuntimeException $e) {
+        echo $e;
+        echo "Internal error";
+        exit;
+      }*/
+      $_SESSION['jirafeau_key'] = $accessToken;
+}
+
+function jirafeau_check_access_token($cfg) {
+      $keyset = jirafeau_setup_keyset($cfg);
+
+      if (!isset($_SESSION['jirafeau_key']) || empty($_SESSION['jirafeau_key'])) {
+        return NULL;
+      }
+      return $_SESSION['jirafeau_key'];
+/*
+      try {
+        $jwt = SimpleJWT\JWT::decode($_SESSION['jirafeau_key'], $keyset, 'HS256');
+      } catch (SimpleJWT\InvalidTokenException $e) {
+        return NULL;
+      }
+
+      $json_token = $jwt->getClaim('token');
+      $token_data = json_decode($json_token, true);
+
+      if (json_last_error() !== JSON_ERROR_NONE) {
+          throw new UnexpectedValueException(sprintf(
+              "Failed to parse JSON response: %s",
+              json_last_error_msg()
+          ));
+      }
+
+      return new \League\OAuth2\Client\Token\AccessToken($token_data);*/
+}
+
+function jirafeau_do_oauth_level_2($cfg, $state, $code) {
+    $provider = jirafeau_build_oauth_provider($cfg);
+    $prov_workspace = jirafeau_build_oauth_bb_workspace($cfg);
+
+    $session = $_SESSION['oauth2state'];
+    if (empty($state) || (isset($session) && $state !== $session)) {
+
+      if (isset($_SESSION['oauth2state'])) {
+          unset($_SESSION['oauth2state']);
+      }
+
+      exit('Error 33: Invalid state');
+    }
+
+    try {
+
+        $storedToken = jirafeau_check_access_token($cfg);
+        if (!isset($storedToken)) {
+          // Try to get an access token using the authorization code grant.
+          $accessToken = $provider->getAccessToken('authorization_code', [
+              'code' => $code
+          ]);
+          jirafeau_store_access_token($cfg, $accessToken);
+        } else {
+          $accessToken = $storedToken;
+        }
+
+        // We have an access token, which we may use in authenticated
+        // requests against the service provider's API.
+/*        echo 'Access Token: ' . $accessToken->getToken() . "<br/>";
+        echo 'Refresh Token: ' . $accessToken->getRefreshToken() . "<br/>";
+        echo 'Expired in: ' . $accessToken->getExpires() . "<br/>";
+        echo 'Already expired? ' . ($accessToken->hasExpired() ? 'expired' : 'not expired') . "<br/>";
+*/
+
+        // Using the access token, we may look up details about the
+        // resource owner.
+        $resourceOwner = $provider->getResourceOwner($accessToken);
+
+        $resourceWorkspace = $prov_workspace->getResourceOwner($accessToken);
+
+	$a = $resourceWorkspace->toArray();
+        $aquila = false;
+        foreach ($a['values'] as $i => $entry) {
+          if ($entry['type'] === "workspace" && $entry['slug'] === "bayesian_lss_team") {
+            $aquila = true;
+          }
+        }
+        if ($aquila === false) {
+          // We do not generate tokens. This user is not part of BLSS;
+          return;
+        }
+
+        // Generate a token
+
+        $username = $resourceOwner->toArray()['username'];
+        if (!isset($username)) {
+          echo "Error 31: Bitbucket did not return username" . NL;
+          exit;
+        }
+        $key_set = jirafeau_setup_keyset($cfg);
+        $headers = ['alg' => 'HS256', 'typ' => 'JWT'];
+        // expiration of the token is one day
+        $claims = ['exp' => time() + 86400, 'user' => $username];
+        $jwt = new SimpleJWT\JWT($headers, $claims);
+
+        try {
+          echo $jwt->encode($key_set) . "\n";
+        } catch (\RuntimeException $e) {
+          echo 'Error 32: error while encoding the token';
+        }
+    } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+        // Failed to get the access token or user details.
+        exit($e->getMessage());
+    }
+    exit;
+}
+

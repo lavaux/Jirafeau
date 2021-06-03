@@ -66,7 +66,8 @@ if (has_error()) {
 }
 
 if (isset($_GET['token'])) {
-
+  echo "Token";
+  exit;
 /* Upload file */
 } elseif (isset($_FILES['file']) && is_writable(VAR_FILES)
     && is_writable(VAR_LINKS)) {
@@ -79,7 +80,6 @@ if (isset($_GET['token'])) {
     } elseif (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), null)) {
             echo 'Error 2: No password nor allowed IP';
             exit;
-        }
     } elseif (isset($_POST['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 

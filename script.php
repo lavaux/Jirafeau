@@ -92,7 +92,7 @@ if (isset($_GET['token'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
       try {
-        $jwt = SimpleJWT\JWT::decode($_GET['token'], $key_set, 'HS256');
+        $jwt = SimpleJWT\JWT::decode($_POST['token'], $key_set, 'HS256');
       } catch (SimpleJWT\InvalidTokenException $e) {
         echo 'Error 30: Invalid token';
         exit;
@@ -442,7 +442,7 @@ elseif (isset($_GET['init_async'])) {
       $key_set = jirafeau_setup_keyset($cfg);
 
       try {
-        $jwt = SimpleJWT\JWT::decode($_GET['token'], $key_set, 'HS256');
+        $jwt = SimpleJWT\JWT::decode($_POST['token'], $key_set, 'HS256');
       } catch (SimpleJWT\InvalidTokenException $e) {
         echo 'Error 30: Invalid token';
         exit;

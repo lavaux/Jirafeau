@@ -115,5 +115,6 @@
     "SECOND": "seconde",
     "LESS_1_SEC": "moins d'une seconde",
     "MADE_WITH": "Créé avec",
-    "TOS": "Conditions d'utilisation du service"
+    "TOS": "Conditions d'utilisation du service",
+    "USER": "Utilisateur"
 }

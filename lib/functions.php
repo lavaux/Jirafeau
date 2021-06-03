@@ -617,6 +617,7 @@ function jirafeau_get_link($hash)
     $out['ip'] = trim($c[8]);
     $out['link_code'] = trim($c[9]);
     $out['crypted'] = trim($c[10]) == 'C';
+    $out['user'] = trim($c[11]);
 
     return $out;
 }
@@ -688,6 +689,7 @@ function jirafeau_admin_list($name, $file_hash, $link_hash)
                 if (strlen($l['ip']) > 0) {
                     echo t('ORIGIN') . ': ' . $l['ip'] . '<br/>';
                 }
+                echo t('USER') . ': ' . $l['user'] . '<br/>';
                 echo '</td><td>';
                 echo '<form method="post">' .
                 '<input type = "hidden" name = "action" value = "download"/>' .
@@ -913,6 +915,7 @@ function jirafeau_get_async_ref($ref)
     $out['ip'] = trim($c[5]);
     $out['last_edited'] = trim($c[6]);
     $out['next_code'] = trim($c[7]);
+    $out['user'] = trim($c[8]);
     return $out;
 }
 
@@ -948,7 +951,7 @@ function jirafeau_async_delete($ref)
   * @param $ip ip address of the client
   * @return a string containing a temporary reference followed by a code or the string 'Error'
   */
-function jirafeau_async_init($filename, $type, $one_time, $key, $time, $ip)
+function jirafeau_async_init($filename, $type, $one_time, $key, $time, $ip, $user)
 {
     $res = 'Error';
 
@@ -984,7 +987,7 @@ function jirafeau_async_init($filename, $type, $one_time, $key, $time, $ip)
         str_replace(NL, '', trim($filename)) . NL .
             str_replace(NL, '', trim($type)) . NL . $password . NL .
             $time . NL . ($one_time ? 'O' : 'R') . NL . $ip . NL .
-            time() . NL . $code . NL
+            time() . NL . $code . NL . $user . NL
     );
     fclose($handle);
 
@@ -1047,7 +1050,7 @@ function jirafeau_async_push($ref, $data, $code, $max_file_size)
         $handle,
         $a['file_name'] . NL. $a['mime_type'] . NL. $a['key'] . NL .
             $a['time'] . NL . $a['onetime'] . NL . $a['ip'] . NL .
-            time() . NL . $code . NL
+            time() . NL . $code . NL . $a['user']
     );
     fclose($handle);
     return $code;
@@ -1116,7 +1119,7 @@ function jirafeau_async_end($ref, $code, $crypt, $link_name_length, $file_hash_m
         $handle,
         $a['file_name'] . NL . $a['mime_type'] . NL . $size . NL .
             $a['key'] . NL . $a['time'] . NL . $hash . NL . $a['onetime'] . NL .
-            time() . NL . $a['ip'] . NL . $delete_link_code . NL . ($crypted ? 'C' : 'O')
+            time() . NL . $a['ip'] . NL . $delete_link_code . NL . ($crypted ? 'C' : 'O') . NL . $a['user'] . NL
     );
     fclose($handle);
     $hash_link = substr(base_16_to_64(md5_file($link_tmp_name)), 0, $link_name_length);

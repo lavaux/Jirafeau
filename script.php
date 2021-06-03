@@ -431,6 +431,7 @@ fi
 }
 /* Initialize an asynchronous upload. */
 elseif (isset($_GET['init_async'])) {
+    $user = 'UNKNOWN';
     if (isset($_POST['upload_password'])) {
         if (!jirafeau_challenge_upload($cfg, get_ip_address($cfg), $_POST['upload_password'])) {
             echo 'Error 20: Invalid password';
@@ -441,6 +442,16 @@ elseif (isset($_GET['init_async'])) {
             echo 'Error 19: No password nor allowed IP';
             exit;
         }
+    } elseif (isset($_POST['token'])) {
+      $key_set = jirafeau_setup_keyset($cfg);
+
+      try {
+        $jwt = SimpleJWT\JWT::decode($_GET['token'], $key_set, 'HS256');
+      } catch (SimpleJWT\InvalidTokenException $e) {
+        echo 'Error 30: Invalid token';
+        exit;
+      }
+      $user = $jwd->getClaim('user');
     }
 
     if (!isset($_POST['filename'])) {
@@ -509,7 +520,8 @@ elseif (isset($_GET['init_async'])) {
         isset($_POST['one_time_download']),
         $key,
         $time,
-        $ip
+        $ip,
+        $user
     );
 }
 /* Continue an asynchronous upload. */

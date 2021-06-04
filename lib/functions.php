@@ -1590,48 +1590,14 @@ function jirafeau_do_oauth_level_1($cfg) {
 }
 
 function jirafeau_store_access_token($cfg, $accessToken) {
-/*      $keyset = jirafeau_setup_keyset($cfg);
-
-      $claims = ['token' => $accessToken];
-      $jwt = new SimpleJWT\JWT($headers, $claims);
-
-      try {
-        $_SESSION['jirafeau_key'] = $jwt->encode($keyset,
-                     json_encode($accessToken->jsonSerialize())
-        );
-      } catch (\RuntimeException $e) {
-        echo $e;
-        echo "Internal error";
-        exit;
-      }*/
       $_SESSION['jirafeau_key'] = $accessToken;
 }
 
 function jirafeau_check_access_token($cfg) {
-      $keyset = jirafeau_setup_keyset($cfg);
-
       if (!isset($_SESSION['jirafeau_key']) || empty($_SESSION['jirafeau_key'])) {
         return NULL;
       }
       return $_SESSION['jirafeau_key'];
-/*
-      try {
-        $jwt = SimpleJWT\JWT::decode($_SESSION['jirafeau_key'], $keyset, 'HS256');
-      } catch (SimpleJWT\InvalidTokenException $e) {
-        return NULL;
-      }
-
-      $json_token = $jwt->getClaim('token');
-      $token_data = json_decode($json_token, true);
-
-      if (json_last_error() !== JSON_ERROR_NONE) {
-          throw new UnexpectedValueException(sprintf(
-              "Failed to parse JSON response: %s",
-              json_last_error_msg()
-          ));
-      }
-
-      return new \League\OAuth2\Client\Token\AccessToken($token_data);*/
 }
 
 function jirafeau_do_oauth_level_2($cfg, $state, $code) {
@@ -1658,19 +1624,21 @@ function jirafeau_do_oauth_level_2($cfg, $state, $code) {
           ]);
           jirafeau_store_access_token($cfg, $accessToken);
         } else {
-          $accessToken = $storedToken;
+          // Using the access token, we may look up details about the
+          // resource owner.
+
+          if ($storedToken->hasExpired()) {
+             $accessToken = $provider->getAccessToken('refresh_token', [
+                'refresh_token' => $storedToken->getRefreshToken()
+             ]);
+          } else {
+             $accessToken = $storedToken;
+          }
         }
 
         // We have an access token, which we may use in authenticated
         // requests against the service provider's API.
-/*        echo 'Access Token: ' . $accessToken->getToken() . "<br/>";
-        echo 'Refresh Token: ' . $accessToken->getRefreshToken() . "<br/>";
-        echo 'Expired in: ' . $accessToken->getExpires() . "<br/>";
-        echo 'Already expired? ' . ($accessToken->hasExpired() ? 'expired' : 'not expired') . "<br/>";
-*/
 
-        // Using the access token, we may look up details about the
-        // resource owner.
         $resourceOwner = $provider->getResourceOwner($accessToken);
 
         $resourceWorkspace = $prov_workspace->getResourceOwner($accessToken);

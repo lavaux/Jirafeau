@@ -6,8 +6,8 @@ import requests as rq
 import contextlib as ctx
 from tqdm import tqdm
 
-hostname = "https://upload.aquila-consortium.org/Jirafeau"
-passwd = "BayesianRulez"
+hostname = "https://upload.aquila-consortium.org/Jirafeau2"
+passwd = ""
 BUFFER_SIZE = 10 * 1024 * 1024
 
 
@@ -15,11 +15,14 @@ class UploadError(IOError):
     pass
 
 
-def upload_file(file_like, file_size=None, time="month", filename="data.dat", key=None):
+def upload_file(file_like, file_size=None, time="month", filename="data.dat", key=None, token=None):
 
     data = {"time": time, "upload_password": passwd, "filename": filename}
     if not key is None:
         data["key"] = key
+
+    if not token is None:
+      data["token"] = token
 
     ret = rq.post(f"{hostname}/script.php?init_async", data=data)
     if ret.text.find("Error") != -1:
@@ -72,12 +75,13 @@ key = None
 
 args = argparse.ArgumentParser()
 args.add_argument("filename", type=str)
+args.add_argument("--token", type=str, default=None)
 
 vals = args.parse_args()
 fname = vals.filename
 with open(fname, mode="rb") as in_f:
     file_size = os.path.getsize(fname)
-    detail = upload_file(in_f, file_size=file_size, filename=os.path.basename(fname))
+    detail = upload_file(in_f, file_size=file_size, filename=os.path.basename(fname), token=vals.token)
 
 print(f"Download link is {detail['download']}")
 print(f"Direct download link is {detail['direct']}")

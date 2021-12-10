@@ -71,6 +71,21 @@ if (isset($_GET['p']) && !empty($_GET['p'])) {
     $do_preview = true;
 }
 
+$current_position = 0;
+$do_async = false;
+if (isset($_GET['a']) && !empty($_GET['a'])) {
+    $do_async = true;
+    if (empty($_GET['p'])) {
+       http_response_code(403);
+       exit;
+    }
+    $current_position = intval($_GET['p']);
+    if ($current_position < 0) {
+       http_response_code(403);
+       exit;
+    }
+}
+
 $p = s2p($link['hash']);
 if (!file_exists(VAR_FILES . $p . $link['hash'])) {
     jirafeau_delete_link($link_name);
@@ -226,17 +241,21 @@ if (!$password_challenged && !$do_download && !$do_preview) {
     exit;
 }
 
-header('HTTP/1.0 200 OK');
-header('Content-Length: ' . $link['file_size']);
-if (!jirafeau_is_viewable($link['mime_type']) || !$cfg['preview'] || $do_download) {
-    header('Content-Disposition: attachment; filename="' . $link['file_name'] . '"');
-} else {
-    header('Content-Disposition: filename="' . $link['file_name'] . '"');
+// Only emits the headers if we are not running asynchronous
+if (!$do_async) {
+  header('HTTP/1.0 200 OK');
+  header('Content-Length: ' . $link['file_size']);
+  if (!jirafeau_is_viewable($link['mime_type']) || !$cfg['preview'] || $do_download) {
+      header('Content-Disposition: attachment; filename="' . $link['file_name'] . '"');
+  } else {
+      header('Content-Disposition: filename="' . $link['file_name'] . '"');
+  }
+  header('Content-Type: ' . $link['mime_type']);
+  if ($cfg['file_hash'] == "md5") {
+      header('Content-MD5: ' . hex_to_base64($link['hash']));
+  }
 }
-header('Content-Type: ' . $link['mime_type']);
-if ($cfg['file_hash'] == "md5") {
-    header('Content-MD5: ' . hex_to_base64($link['hash']));
-}
+
 if ($cfg['litespeed_workaround']) {
     // Work around that LiteSpeed truncates large files.
     // See https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:config:internal-redirect
@@ -271,7 +290,27 @@ elseif ($link['crypted']) {
     mcrypt_module_close($m);
 }
 /* Read file. */
-else {
+elseif ($do_async) {
+    $r = fopen(VAR_FILES . $p . $link['hash'], 'r');
+    if (fseek($r, $position, SEEK_SET) < 0) {
+       http_response_code(403);
+       fclose($r);
+       exit;
+    }
+    header('HTTP/1.0 200 OK');
+    $remaining = $this_block_size = $link['file_size'] - $position;
+    if ($this_block_size > JIRAFEAU_BLOCK_SIZE)
+      $this_block_size = JIRAFEAU_BLOCK_SIZE;
+
+    header('Content-Length: ' . $this_block_size);
+    header('Content-Type: ' . $link['mime_type']);
+    header('Jirafeau-Remaining: ' . $remaining);
+    if ($cfg['file_hash'] == "md5") {
+      header('Content-MD5: ' . hex_to_base64($link['hash']));
+    }
+    print fread($r, $this_block_size); 
+    fclose($r);
+} else {
     $r = fopen(VAR_FILES . $p . $link['hash'], 'r');
     while (!feof($r)) {
         print fread($r, 1024);

@@ -71,7 +71,7 @@ if (isset($_GET['p']) && !empty($_GET['p'])) {
     $do_preview = true;
 }
 
-$current_position = 0;
+$position = 0;
 $do_async = false;
 if (isset($_GET['a']) && !empty($_GET['a'])) {
     $do_async = true;
@@ -79,8 +79,8 @@ if (isset($_GET['a']) && !empty($_GET['a'])) {
        http_response_code(403);
        exit;
     }
-    $current_position = intval($_GET['x']);
-    if ($current_position < 0) {
+    $position = intval($_GET['x']);
+    if ($position < 0) {
        http_response_code(403);
        exit;
     }
@@ -291,6 +291,11 @@ elseif ($link['crypted']) {
 }
 /* Read file. */
 elseif ($do_async) {
+    if ($position > $link['file_size']) {
+       http_response_code(403);
+       echo "Bad position. file size is " . $link['file_size'] . "\n";
+       exit;
+    }
     $r = fopen(VAR_FILES . $p . $link['hash'], 'r');
     if (fseek($r, $position, SEEK_SET) < 0) {
        http_response_code(403);

@@ -317,6 +317,7 @@ elseif ($do_async) {
     header('Content-Type: ' . $link['mime_type']);
     header('X-Jirafeau-Remaining: ' . $remaining);
     header('X-Jirafeau-Filename: ' . $link['file_name']);
+    header('X-Jirafeau-Filesize: ' . $link['file_size']);
     if ($cfg['file_hash'] == "md5") {
       header('Content-MD5: ' . hex_to_base64($link['hash']));
     }

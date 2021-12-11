@@ -73,7 +73,7 @@ define('JIRAFEAU_WEEK', 604800); // JIRAFEAU_DAY * 7
 define('JIRAFEAU_MONTH', 2592000); // JIRAFEAU_DAY * 30
 define('JIRAFEAU_QUARTER', 7776000); // JIRAFEAU_DAY * 90
 define('JIRAFEAU_YEAR', 31536000); // JIRAFEAU_DAY * 365
-define('JIRAFEAU_BLOCK_SIZE', 1024*1024);
+define('JIRAFEAU_BLOCK_SIZE', 10*1024*1024);
 
 // set UTC as default timezone for all date/time functions
 date_default_timezone_set('UTC');

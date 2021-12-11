@@ -291,7 +291,7 @@ elseif ($link['crypted']) {
 }
 /* Read file. */
 elseif ($do_async) {
-    if ($position > $link['file_size']) {
+    if ($position >= $link['file_size']) {
        http_response_code(403);
        echo "Bad position. file size is " . $link['file_size'] . "\n";
        exit;

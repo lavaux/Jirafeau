@@ -321,7 +321,16 @@ elseif ($do_async) {
     if ($cfg['file_hash'] == "md5") {
       header('Content-MD5: ' . hex_to_base64($link['hash']));
     }
-    print fread($r, $this_block_size); 
+    $small_block = 8*1024;
+    $sent_data = 0;
+    while ($small_block > 0) {
+      $small_block = min($this_block_size-$sent_data,$small_block);
+      print(@fread($r, $small_block));
+      $sent_data += $small_block;
+      ob_flush();
+      flush();
+    }
+
     fclose($r);
 } else {
     $r = fopen(VAR_FILES . $p . $link['hash'], 'r');

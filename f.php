@@ -79,11 +79,13 @@ if (isset($_GET['a']) && !empty($_GET['a'])) {
     $do_async = true;
     if (empty($_GET['x'])) {
        http_response_code(403);
+       echo "No position given.";
        exit;
     }
     $position = intval($_GET['x']);
     if ($position < 0) {
        http_response_code(403);
+       echo "Position is negative.";
        exit;
     }
 }

@@ -302,6 +302,7 @@ elseif ($do_async) {
     $r = fopen(VAR_FILES . $p . $link['hash'], 'r');
     if (fseek($r, $position, SEEK_SET) < 0) {
        http_response_code(403);
+       echo "Impossible to seek to $position\n";
        fclose($r);
        exit;
     }

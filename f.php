@@ -75,11 +75,11 @@ $current_position = 0;
 $do_async = false;
 if (isset($_GET['a']) && !empty($_GET['a'])) {
     $do_async = true;
-    if (empty($_GET['p'])) {
+    if (empty($_GET['x'])) {
        http_response_code(403);
        exit;
     }
-    $current_position = intval($_GET['p']);
+    $current_position = intval($_GET['x']);
     if ($current_position < 0) {
        http_response_code(403);
        exit;

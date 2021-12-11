@@ -13,7 +13,8 @@ class DownloadError(Exception):
 def get_file(hostname, link, token=None):
     print(f"Download from {hostname}, link={link}")
     base_link = f"{hostname}/f.php?h={link}&a=1&d=1"
-    ret = rq.get(base_link + "&x=0")
+    s = rq.Session()
+    ret = s.get(base_link + "&x=0")
     if ret.status_code != 200:
         raise DownloadError(f"Status: {ret.status_code}, Textt: {ret.text}")
 
@@ -43,7 +44,7 @@ def get_file(hostname, link, token=None):
             current += len(buf)
             if current == file_size:
               break 
-            ret = rq.get(f"{base_link}&x={current}")
+            ret = s.get(f"{base_link}&x={current}")
             if ret.status_code != 200:
                 raise DownloadError(ret.text)
             remaining = ret.headers['X-Jirafeau-Remaining']

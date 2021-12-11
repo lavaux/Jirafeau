@@ -36,6 +36,7 @@ if (!isset($_GET['h']) || empty($_GET['h'])) {
 $link_name = $_GET['h'];
 
 if (!preg_match('/[0-9a-zA-Z_-]+$/', $link_name)) {
+    http_response_code(404);
     require(JIRAFEAU_ROOT.'lib/template/header.php');
     echo '<div class="error"><p>' . t('FILE_404') . '</p></div>';
     require(JIRAFEAU_ROOT.'lib/template/footer.php');
@@ -44,6 +45,7 @@ if (!preg_match('/[0-9a-zA-Z_-]+$/', $link_name)) {
 
 $link = jirafeau_get_link($link_name);
 if (count($link) == 0) {
+    http_response_code(404);
     require(JIRAFEAU_ROOT.'lib/template/header.php');
     echo '<div class="error"><p>' . t('FILE_404') .
     '</p></div>';

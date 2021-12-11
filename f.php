@@ -77,7 +77,7 @@ $position = 0;
 $do_async = false;
 if (isset($_GET['a']) && !empty($_GET['a'])) {
     $do_async = true;
-    if (empty($_GET['x'])) {
+    if (!isset($_GET['x'])) {
        http_response_code(403);
        echo "No position given.";
        exit;

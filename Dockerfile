@@ -11,6 +11,11 @@ RUN apk update && \
     echo "UTC" > /etc/timezone && \
     mkdir /www
 
+# install lighttpd
+RUN apk add lighttpd php7 php7-session php7-cgi php7-fpm php7-mcrypt php7-openssl php7-json php7-phar php7-mbstring && \
+    echo "extension=/usr/lib/php7/modules/mcrypt.so" > /etc/php7/conf.d/mcrypt.ini && \
+    chown -R $USER_ID:$GROUP_ID /var/log/lighttpd 
+
 # install jirafeau
 WORKDIR /www
 COPY .git .git
@@ -26,10 +31,6 @@ COPY docker/run.sh /run.sh
 RUN chmod o=,ug=rx /cleanup.sh /run.sh
 COPY docker/docker_config.php /docker_config.php
 
-# install lighttpd
-RUN apk add lighttpd php7 php7-session php7-cgi php7-fpm php7-mcrypt php7-openssl php7-json php7-phar php7-mbstring && \
-    echo "extension=/usr/lib/php7/modules/mcrypt.so" > /etc/php7/conf.d/mcrypt.ini && \
-    chown -R $USER_ID:$GROUP_ID /var/log/lighttpd 
 
 RUN \
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \

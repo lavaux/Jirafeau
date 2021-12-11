@@ -247,6 +247,7 @@ if (!$password_challenged && !$do_download && !$do_preview) {
 if (!$do_async) {
   header('HTTP/1.0 200 OK');
   header('Content-Length: ' . $link['file_size']);
+  header('X-Jirafeau-Filename: ' . $link['file_name']);
   if (!jirafeau_is_viewable($link['mime_type']) || !$cfg['preview'] || $do_download) {
       header('Content-Disposition: attachment; filename="' . $link['file_name'] . '"');
   } else {
@@ -311,7 +312,8 @@ elseif ($do_async) {
 
     header('Content-Length: ' . $this_block_size);
     header('Content-Type: ' . $link['mime_type']);
-    header('Jirafeau-Remaining: ' . $remaining);
+    header('X-Jirafeau-Remaining: ' . $remaining);
+    header('X-Jirafeau-Filename: ' . $link['file_name']);
     if ($cfg['file_hash'] == "md5") {
       header('Content-MD5: ' . hex_to_base64($link['hash']));
     }
